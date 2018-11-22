@@ -8,6 +8,7 @@ import com.feng.axon.event.MessagePostedEvent;
 import com.feng.axon.event.ParticipantJoinedRoomEvent;
 import com.feng.axon.event.ParticipantLeftRoomEvent;
 import com.feng.axon.event.RoomCreatedEvent;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventhandling.EventHandler;
@@ -22,15 +23,13 @@ import static org.axonframework.modelling.command.AggregateLifecycle.apply;
 
 @Slf4j
 @Aggregate
+@NoArgsConstructor
 public class ChatRoom {
 
     @AggregateIdentifier
     private String roomId;
     private String name;
     private Set<String> participants;
-
-    public ChatRoom(){
-    }
 
     /**
      * 创建聊天室

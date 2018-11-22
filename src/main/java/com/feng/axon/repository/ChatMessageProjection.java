@@ -21,8 +21,10 @@ public class ChatMessageProjection {
 
     @EventHandler
     public void on(MessagePostedEvent event) {
-        log.info("MessagePostedEvent=======");
-        repository.save(new ChatMessage(event.getRoomId(), event.getMessage(), event.getParticipant()));
+        ChatMessage chatMessage = new ChatMessage(event.getRoomId(), event.getMessage(), event.getParticipant());
+        repository.save(chatMessage);
+        //发射信息，通知 Query 数据库更新了
+        updateEmitter.emit(RoomMessagesQuery.class, query -> query.getRoomId().equals(event.getRoomId()), chatMessage);
     }
 
     @QueryHandler

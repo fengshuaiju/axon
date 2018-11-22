@@ -1,6 +1,7 @@
 package com.feng.axon.repository;
 
 import com.feng.axon.utils.SetToStringConverter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.util.CollectionUtils;
 
@@ -10,6 +11,7 @@ import javax.persistence.Id;
 import java.util.HashSet;
 import java.util.Set;
 
+@Data
 @Entity
 @NoArgsConstructor
 public class RoomSummary {
