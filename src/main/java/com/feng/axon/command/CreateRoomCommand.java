@@ -4,7 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
-import org.springframework.stereotype.Component;
+
+import javax.validation.constraints.NotEmpty;
 
 @Data
 @AllArgsConstructor
@@ -13,6 +14,8 @@ public class CreateRoomCommand {
 
     @TargetAggregateIdentifier
     private String roomId;
+
+    @NotEmpty
     private String name;
 }
 

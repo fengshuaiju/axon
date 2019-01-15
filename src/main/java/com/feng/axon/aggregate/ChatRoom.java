@@ -1,4 +1,4 @@
-package com.feng.axon.handle;
+package com.feng.axon.aggregate;
 
 import com.feng.axon.command.CreateRoomCommand;
 import com.feng.axon.command.JoinRoomCommand;
@@ -11,7 +11,6 @@ import com.feng.axon.event.RoomCreatedEvent;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.spring.stereotype.Aggregate;
@@ -82,7 +81,7 @@ public class ChatRoom {
         participants.add(event.getParticipant());
     }
 
-    @EventHandler
+    @EventSourcingHandler
     protected void on(ParticipantLeftRoomEvent event){
         this.participants.remove(event.getParticipant());
     }
