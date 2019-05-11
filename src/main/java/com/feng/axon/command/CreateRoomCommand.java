@@ -1,5 +1,6 @@
 package com.feng.axon.command;
 
+import com.feng.axon.model.ChatRoomId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +14,7 @@ import javax.validation.constraints.NotEmpty;
 public class CreateRoomCommand {
 
     @TargetAggregateIdentifier
-    private String roomId;
+    private ChatRoomId roomId;
 
     @NotEmpty
     private String name;

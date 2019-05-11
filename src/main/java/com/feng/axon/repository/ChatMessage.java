@@ -1,7 +1,10 @@
 package com.feng.axon.repository;
 
+import com.feng.axon.model.ChatRoomId;
+import com.feng.axon.model.ChatterId;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -17,14 +20,16 @@ public class ChatMessage {
     private Long id;
 
     private long timestamp;
-    private String roomId;
+    private ChatRoomId roomId;
+    private ChatterId chatterId;
     private String message;
-    private String participant;
+    @Setter
+    private String chatterName;
 
-    public ChatMessage(String roomId, String message, String participant){
+    public ChatMessage(ChatRoomId roomId, ChatterId chatterId, String message){
         this.roomId = roomId;
+        this.chatterId = chatterId;
         this.message = message;
-        this.participant = participant;
         this.timestamp = System.currentTimeMillis();
     }
 

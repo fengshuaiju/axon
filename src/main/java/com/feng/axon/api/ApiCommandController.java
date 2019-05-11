@@ -1,12 +1,12 @@
 package com.feng.axon.api;
 
-import com.feng.axon.command.CreateRoomCommand;
-import com.feng.axon.command.JoinRoomCommand;
-import com.feng.axon.command.LeaveRoomCommand;
-import com.feng.axon.command.PostMessageCommand;
+import com.feng.axon.command.*;
 import com.feng.axon.config.MetaDataStudent;
 import com.feng.axon.config.MyCommandGateway;
 import com.feng.axon.config.Person;
+import com.feng.axon.model.ChatRoomId;
+import com.feng.axon.model.ChatterId;
+import com.google.common.collect.ImmutableMap;
 import lombok.RequiredArgsConstructor;
 import org.axonframework.messaging.MetaData;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 @RestController
@@ -34,13 +34,14 @@ public class ApiCommandController {
      */
     @PostMapping("/rooms")
     @ResponseStatus(HttpStatus.CREATED)
-    public Future<String> createChatRoom(@RequestBody @Valid CreateRoomCommand command) {
+    public Future<Map<String, String>> createChatRoom(@RequestBody @Valid CreateRoomCommand command) {
         Assert.notNull(command.getName(), "participant is mandatory for a chatroom");
-        String roomId = command.getRoomId() == null ? UUID.randomUUID().toString() : command.getRoomId();
-        command.setRoomId(roomId);
+        ChatRoomId chatRoomId = ChatRoomId.newId();
+        command.setRoomId(chatRoomId);
         Map<String, String> mapDate = new HashMap<>();
         mapDate.put("key", "val");
-        return commandGateway.send(command, MetaData.from(mapDate));
+        commandGateway.send(command, MetaData.from(mapDate));
+        return CompletableFuture.completedFuture(ImmutableMap.of("id", chatRoomId.toString()));
     }
 
     /**
@@ -50,13 +51,15 @@ public class ApiCommandController {
      * @param command
      * @return
      */
-    @PostMapping("/rooms/{roomId}/participants")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Future<Void> joinChatRoom(@PathVariable String roomId, @RequestBody @Valid JoinRoomCommand command) {
-        Assert.isTrue(!StringUtils.isEmpty(command.getParticipant()), "participant participant is null");
+    @PutMapping("/rooms/{roomId}/participant")
+    @ResponseStatus(HttpStatus.OK)
+    public Future<Map<String, Object>> joinChatRoom(@PathVariable ChatRoomId roomId,
+                                                    @RequestBody @Valid JoinRoomCommand command) {
+        Assert.isTrue(!StringUtils.isEmpty(command.getParticipantName()), "participant participant is null");
         command.setRoomId(roomId);
         Person student = new MetaDataStudent(12, "feng");
-        return commandGateway.send(command, student);
+        return commandGateway.send(command, student).thenApply(chatterId ->
+                ImmutableMap.of("chatterId", chatterId));
     }
 
     /**
@@ -66,11 +69,33 @@ public class ApiCommandController {
      * @param command
      * @return
      */
-    @PostMapping("/rooms/{roomId}/messages")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Future<Void> postMessage(@PathVariable String roomId, @RequestBody @Valid PostMessageCommand command) {
-        Assert.isTrue(!StringUtils.isEmpty(command.getParticipant()), "post message is empty");
+    @PutMapping("/rooms/{roomId}/messages/{chatterId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Future<Void> postMessage(@PathVariable ChatRoomId roomId,
+                                    @PathVariable ChatterId chatterId,
+                                    @RequestBody PostMessageCommand command) {
+        Assert.isTrue(!StringUtils.isEmpty(command.getMessage()), "post message is empty");
         command.setRoomId(roomId);
+        command.setChatterId(chatterId);
+        return commandGateway.send(command);
+    }
+
+    /**
+     * 修改聊天者信息
+     *
+     * @param roomId
+     * @param chatterId
+     * @param command
+     * @return
+     */
+    @PutMapping("/rooms/{roomId}/messages/{chatterId}/info")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Future<Void> updateChatterInfo(@PathVariable ChatRoomId roomId,
+                                          @PathVariable ChatterId chatterId,
+                                          @RequestBody UpdateChatterCommand command) {
+        //TODO 已生成的聊天记录里的聊天者姓名要不要改动
+        command.setChatRoomId(roomId);
+        command.setChatterId(chatterId);
         return commandGateway.send(command);
     }
 
@@ -78,15 +103,17 @@ public class ApiCommandController {
      * 离开聊天室
      *
      * @param roomId
-     * @param command
      * @return
      */
-    @DeleteMapping("/rooms/{roomId}/participants")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Future<Void> leaveChatRoom(@PathVariable String roomId, @RequestBody @Valid LeaveRoomCommand command) {
-        Assert.isTrue(!StringUtils.isEmpty(command.getName()), "participant participant is empty");
-        command.setRoomId(roomId);
-        return commandGateway.send(command);
+    @DeleteMapping("/rooms/{roomId}/participants/{chatterId}/leave")
+    @ResponseStatus(HttpStatus.OK)
+    public Future<Void> leaveChatRoom(@PathVariable ChatRoomId roomId,
+                                      @PathVariable ChatterId chatterId) {
+        return commandGateway.send(LeaveRoomCommand.builder()
+                .roomId(roomId)
+                .chatterId(chatterId)
+                .build()
+        );
     }
 
 }

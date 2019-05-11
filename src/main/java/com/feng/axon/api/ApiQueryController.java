@@ -1,5 +1,6 @@
 package com.feng.axon.api;
 
+import com.feng.axon.model.ChatRoomId;
 import com.feng.axon.query.AllRoomsQuery;
 import com.feng.axon.query.RoomMessagesQuery;
 import com.feng.axon.repository.ChatMessage;
@@ -34,7 +35,7 @@ public class ApiQueryController {
 
 
     @GetMapping(value = "/rooms/{roomId}/messages/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ChatMessage> subscribeRoomMessages(@PathVariable String roomId) {
+    public Flux<ChatMessage> subscribeRoomMessages(@PathVariable ChatRoomId roomId) {
         SubscriptionQueryResult<List<ChatMessage>, ChatMessage> result;
 
         result = queryGateway.subscriptionQuery(new RoomMessagesQuery(roomId),

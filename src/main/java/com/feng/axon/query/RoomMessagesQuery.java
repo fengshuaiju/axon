@@ -1,5 +1,6 @@
 package com.feng.axon.query;
 
+import com.feng.axon.model.ChatRoomId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,5 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RoomMessagesQuery {
-    private String roomId;
+    private ChatRoomId roomId;
 }

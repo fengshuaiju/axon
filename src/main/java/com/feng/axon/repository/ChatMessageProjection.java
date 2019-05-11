@@ -18,10 +18,18 @@ public class ChatMessageProjection {
 
     private final ChatMessageRepository repository;
     private final QueryUpdateEmitter updateEmitter;
+    private final RoomSummaryRepository roomSummaryRepository;
 
     @EventHandler
     public void on(MessagePostedEvent event) {
-        ChatMessage chatMessage = new ChatMessage(event.getRoomId(), event.getMessage(), event.getParticipant());
+        ChatMessage chatMessage = new ChatMessage(event.getRoomId(), event.getChatterId(), event.getMessage());
+        RoomSummary roomSummary = roomSummaryRepository.findByRoomId(event.getRoomId()).orElseThrow(RuntimeException::new);
+        roomSummary.getParticipants().forEach(chatter -> {
+            if (event.getChatterId().equals(chatter.chatterId())) {
+                chatMessage.setChatterName(chatter.name());
+            }
+        });
+
         repository.save(chatMessage);
         //发射信息，通知 Query 数据库更新了
         updateEmitter.emit(RoomMessagesQuery.class, query -> query.getRoomId().equals(event.getRoomId()), chatMessage);

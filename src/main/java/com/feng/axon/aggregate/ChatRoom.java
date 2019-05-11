@@ -9,6 +9,8 @@ import com.feng.axon.event.MessagePostedEvent;
 import com.feng.axon.event.ParticipantJoinedRoomEvent;
 import com.feng.axon.event.ParticipantLeftRoomEvent;
 import com.feng.axon.event.RoomCreatedEvent;
+import com.feng.axon.model.ChatRoomId;
+import com.feng.axon.model.ChatterId;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;
@@ -16,6 +18,8 @@ import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.messaging.MetaData;
 import org.axonframework.messaging.annotation.MetaDataValue;
 import org.axonframework.modelling.command.AggregateIdentifier;
+import org.axonframework.modelling.command.AggregateMember;
+import org.axonframework.modelling.command.ForwardMatchingInstances;
 import org.axonframework.spring.stereotype.Aggregate;
 
 import java.util.HashSet;
@@ -29,9 +33,11 @@ import static org.axonframework.modelling.command.AggregateLifecycle.apply;
 public class ChatRoom {
 
     @AggregateIdentifier
-    private String roomId;
+    private ChatRoomId roomId;
     private String name;
-    private Set<String> participants;
+
+    @AggregateMember(eventForwardingMode = ForwardMatchingInstances.class)
+    private Set<Chatter> chatters;
 
     /**
      * 创建聊天室
@@ -47,14 +53,14 @@ public class ChatRoom {
     /**
      * 加入聊天室
      *
-     * @param joinRoomCommand
+     * @param command
      */
     @CommandHandler
-    public void handle(JoinRoomCommand joinRoomCommand, @MetaDataValue("metaData") Person metaData) {
+    public ChatterId handle(JoinRoomCommand command, @MetaDataValue("metaData") Person metaData) {
         log.info(metaData.toString());
-        if (!participants.contains(joinRoomCommand.getParticipant())) {
-            apply(new ParticipantJoinedRoomEvent(joinRoomCommand.getRoomId(), joinRoomCommand.getParticipant()));
-        }
+        ChatterId chatterId = ChatterId.newId();
+        apply(new ParticipantJoinedRoomEvent(command.getRoomId(), chatterId, command.getParticipantName(), command.getSex()));
+        return chatterId;
     }
 
     /**
@@ -64,7 +70,7 @@ public class ChatRoom {
      */
     @CommandHandler
     public void handle(PostMessageCommand command) {
-        apply(new MessagePostedEvent(command.getRoomId(), command.getMessage(), command.getParticipant()));
+        apply(new MessagePostedEvent(command.getRoomId(), command.getChatterId(), command.getMessage()));
     }
 
     /**
@@ -74,25 +80,28 @@ public class ChatRoom {
      */
     @CommandHandler
     public void handle(LeaveRoomCommand command) {
-        apply(new ParticipantLeftRoomEvent(command.getRoomId(), command.getName()));
+        apply(new ParticipantLeftRoomEvent(command.getRoomId(), command.getChatterId()));
     }
-
 
     @EventSourcingHandler
     protected void on(RoomCreatedEvent event) {
         this.roomId = event.getRoomId();
         this.name = event.getName();
-        this.participants = new HashSet<>();
+        this.chatters = new HashSet<>();
     }
 
     @EventSourcingHandler
     protected void on(ParticipantJoinedRoomEvent event) {
-        participants.add(event.getParticipant());
+        chatters.add(new Chatter(event.getChatterId(), event.getName(), event.getSex()));
     }
 
     @EventSourcingHandler
     protected void on(ParticipantLeftRoomEvent event) {
-        this.participants.remove(event.getParticipant());
+        this.chatters.forEach(chatter -> {
+            if (event.getChatterId().equals(chatter.chatterId())) {
+                this.chatters.remove(chatter);
+            }
+        });
     }
 
 }
