@@ -1,0 +1,2 @@
+CREATE DATABASE command;
+CREATE DATABASE query;

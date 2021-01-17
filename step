@@ -1,0 +1,34 @@
+docker run -it --rm --name zookeeper -p 2181:2181 -p 2888:2888 -p 3888:3888 debezium/zookeeper:1.3
+
+docker run -it --rm --name kafka -p 9092:9092 --link zookeeper:zookeeper debezium/kafka:1.3
+
+docker run -it --rm --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=fengshuaiju -e MYSQL_USER=mysqluser -e MYSQL_PASSWORD=mysqlpw debezium/example-mysql:1.3
+
+docker run -it --rm --name connect -p 8083:8083 -e GROUP_ID=1 -e CONFIG_STORAGE_TOPIC=my_connect_configs -e OFFSET_STORAGE_TOPIC=my_connect_offsets -e STATUS_STORAGE_TOPIC=my_connect_statuses --link zookeeper:zookeeper --link kafka:kafka --link mysql:mysql debezium/connect:1.3
+
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:8083/connectors/ -d '{ "name": "inventory-connector", "config": { "connector.class": "io.debezium.connector.mysql.MySqlConnector", "tasks.max": "1", "database.hostname": "mysql", "database.port": "3306", "database.user": "root", "database.password": "fengshuaiju", "database.server.id": "184054", "database.server.name": "dbserver1", "database.include.list": "inventory", "database.history.kafka.bootstrap.servers": "kafka:9092", "database.history.kafka.topic": "dbhistory.inventory" } }'
+
+curl -H "Accept:application/json" localhost:8083/connectors/
+["inventory-connector"]
+
+
+docker run -it --rm --name watcher --link zookeeper:zookeeper --link kafka:kafka debezium/kafka:1.3 watch-topic -a -k dbserver1.inventory.customers
+
+
+
+
+
+临时修改 ONLY_FULL_GROUP_BY 模式
+查询出来现有的模式
+
+
+select @@global.sql_mode;
+去掉里面的 ONLY_FULL_GROUP_BY 模式，然后set 回去
+
+
+set @@global.sql_mode = "查出来的值，去掉 ONLY_FULL_GROUP_BY"
+ 修改配置文件中的 ONLY_FULL_GROUP_BY 模式
+找到 my.ini 文件，修改其中的 sql_mode 值
+
+
+sql_mode="查出来的值，去掉 ONLY_FULL_GROUP_BY"

@@ -1,0 +1,19 @@
+server:
+  port: 8100
+
+spring:
+  datasource:
+    platform: postgresql
+    url: jdbc:postgresql://localhost:5432/command
+    username: postgres
+    password: fengshuaiju
+  jpa:
+    database: postgresql
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.jdbc.lob.non_contextual_creation: true
+
+axon:
+  serializer:
+    events: jackson

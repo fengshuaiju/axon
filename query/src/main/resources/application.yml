@@ -1,0 +1,32 @@
+server:
+  port: 8200
+
+spring:
+  datasource:
+    platform: postgresql
+    url: jdbc:postgresql://localhost:5432/query
+    username: postgres
+    password: fengshuaiju
+    schema:
+      - classpath:schema.sql
+    initialization-mode: always
+  jpa:
+    database: postgresql
+    hibernate:
+      ddl-auto: none
+
+axon:
+  serializer:
+    events: jackson
+  kafka:
+    default-topic: command.public._entry
+    consumer:
+      client-id: axon-query
+      auto-offset-reset: earliest
+      event-processor-mode: tracking
+      enable-auto-commit: true
+  eventhandling:
+    processors:
+      projections:
+        source: streamableKafkaMessageSource
+        mode: TRACKING
