@@ -1,26 +1,31 @@
 package com.feng.axon.command;
 
 import com.feng.axon.model.ChatRoomId;
-import com.feng.axon.model.ChatterId;
 import com.feng.axon.model.Sex;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class JoinRoomCommand {
-    @TargetAggregateIdentifier
-    private ChatRoomId roomId;
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class JoinRoomCommand extends Command {
 
     @NotEmpty
-    private String participantName;
+    private String name;
 
     @NotNull
     private Sex sex;
+
+    public JoinRoomCommand(ChatRoomId chatRoomId, String name, Sex sex) {
+        super(chatRoomId);
+        this.name = name;
+        this.sex = sex;
+    }
+
 }

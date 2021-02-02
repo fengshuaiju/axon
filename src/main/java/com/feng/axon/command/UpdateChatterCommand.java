@@ -5,22 +5,18 @@ import com.feng.axon.model.ChatterId;
 import com.feng.axon.model.Sex;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class UpdateChatterCommand {
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class UpdateChatterCommand extends Command {
     @NotNull
-    @TargetAggregateIdentifier
-    private ChatRoomId chatRoomId;
-
-    @NotNull
-//    @TargetAggregateIdentifier
     private ChatterId chatterId;
 
     @NotEmpty
@@ -28,4 +24,11 @@ public class UpdateChatterCommand {
 
     @NotNull
     private Sex sex;
+
+    public UpdateChatterCommand(ChatRoomId chatRoomId, ChatterId chatterId, String name, Sex sex) {
+        super(chatRoomId);
+        this.chatterId = chatterId;
+        this.name = name;
+        this.sex = sex;
+    }
 }

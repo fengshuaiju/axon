@@ -1,15 +1,21 @@
-axon 4.0
+axon 4.*
 https://axoniq.io/
 
-java -jar axonserver-4.0.jar
+docker-compose up -d
 
 http://localhost:8080/h2-console
-JDBC URL: jdbc:h2:mem:testdb
+JDBC URL: jdbc:h2:mem:querydb
 
 
 创建聊天室
 curl -X POST http://127.0.0.1:8080/rooms -H 'Content-Type: application/json' -d '{"name":"myChatRoom"}'
 
 加入聊天室
-curl -X POST http://127.0.0.1:8080/rooms/d413b067-864d-4546-a7e6-68d95df2d1e0/participants -d '{"participant":"fengshuaiju"}'
+curl -X PUT http://127.0.0.1:8080/rooms/{roomId}/chatter -H 'Content-Type: application/json' -d '{"participantName":"fengshuaiju","sex":"男"}'
+
+查询聊天室的人员
+curl -X GET http://127.0.0.1:8080/rooms/rooms/{roomId}/chatters
+
+在聊天室里发送消息
+curl -X POST http://127.0.0.1:8080/rooms/{roomId}/messages/{chatterId} -H 'Content-Type: application/json' -d '{"message":"chatter message"}'
 

@@ -1,9 +1,7 @@
 package com.feng.axon.api;
 
 import com.feng.axon.command.*;
-import com.feng.axon.config.MetaDataStudent;
-import com.feng.axon.config.MyCommandGateway;
-import com.feng.axon.config.Person;
+import com.feng.axon.config.command.MyCommandGateway;
 import com.feng.axon.model.ChatRoomId;
 import com.feng.axon.model.ChatterId;
 import com.google.common.collect.ImmutableMap;
@@ -13,12 +11,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
-import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,14 +31,13 @@ public class ApiCommandController {
      */
     @PostMapping("/rooms")
     @ResponseStatus(HttpStatus.CREATED)
-    public Future<Map<String, String>> createChatRoom(@RequestBody @Valid CreateRoomCommand command) {
-        Assert.notNull(command.getName(), "participant is mandatory for a chatroom");
+    public Mono<Map<String, String>> createChatRoom( /** @Valid */@RequestBody CreateRoomCommand command) {
         ChatRoomId chatRoomId = ChatRoomId.newId();
         command.setRoomId(chatRoomId);
         Map<String, String> mapDate = new HashMap<>();
-        mapDate.put("key", "val");
+        mapDate.put("userId", "axonUser");
         commandGateway.send(command, MetaData.from(mapDate));
-        return CompletableFuture.completedFuture(ImmutableMap.of("id", chatRoomId.toString()));
+        return Mono.fromFuture(CompletableFuture.completedFuture(ImmutableMap.of("id", chatRoomId.toString())));
     }
 
     /**
@@ -53,13 +49,13 @@ public class ApiCommandController {
      */
     @PutMapping("/rooms/{roomId}/participant")
     @ResponseStatus(HttpStatus.OK)
-    public Future<Map<String, Object>> joinChatRoom(@PathVariable ChatRoomId roomId,
-                                                    @RequestBody @Valid JoinRoomCommand command) {
-        Assert.isTrue(!StringUtils.isEmpty(command.getParticipantName()), "participant participant is null");
+    public Mono<Map<String, Object>> joinChatRoom(@PathVariable ChatRoomId roomId,
+                                                  @RequestBody JoinRoomCommand command) {
+        Assert.isTrue(!StringUtils.isEmpty(command.getName()), "participant participant is null");
         command.setRoomId(roomId);
-        Person student = new MetaDataStudent(12, "feng");
-        return commandGateway.send(command, student).thenApply(chatterId ->
-                ImmutableMap.of("chatterId", chatterId));
+        MetaData metaData = MetaData.with("userId", "axonUser");
+        return Mono.fromFuture(commandGateway.send(command, metaData)
+                .thenApply(chatterId -> ImmutableMap.of("chatterId", chatterId)));
     }
 
     /**
@@ -71,13 +67,14 @@ public class ApiCommandController {
      */
     @PutMapping("/rooms/{roomId}/messages/{chatterId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Future<Void> postMessage(@PathVariable ChatRoomId roomId,
-                                    @PathVariable ChatterId chatterId,
-                                    @RequestBody PostMessageCommand command) {
+    public Mono<Void> postMessage(@PathVariable ChatRoomId roomId,
+                                  @PathVariable ChatterId chatterId,
+                                  @RequestBody PostMessageCommand command) {
         Assert.isTrue(!StringUtils.isEmpty(command.getMessage()), "post message is empty");
         command.setRoomId(roomId);
         command.setChatterId(chatterId);
-        return commandGateway.send(command);
+        MetaData metaData = MetaData.with("userId", "axonUser");
+        return Mono.fromFuture(commandGateway.send(command, metaData));
     }
 
     /**
@@ -88,15 +85,15 @@ public class ApiCommandController {
      * @param command
      * @return
      */
-    @PutMapping("/rooms/{roomId}/messages/{chatterId}/info")
+    @PutMapping("/rooms/{roomId}/chatters/{chatterId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Future<Void> updateChatterInfo(@PathVariable ChatRoomId roomId,
-                                          @PathVariable ChatterId chatterId,
-                                          @RequestBody UpdateChatterCommand command) {
-        //TODO 已生成的聊天记录里的聊天者姓名要不要改动
-        command.setChatRoomId(roomId);
+    public Mono<Void> updateChatterInfo(@PathVariable ChatRoomId roomId,
+                                        @PathVariable ChatterId chatterId,
+                                        @RequestBody UpdateChatterCommand command) {
+        command.setRoomId(roomId);
         command.setChatterId(chatterId);
-        return commandGateway.send(command);
+        MetaData metaData = MetaData.with("userId", "axonUser");
+        return Mono.fromFuture(commandGateway.send(command, metaData));
     }
 
     /**
@@ -105,15 +102,24 @@ public class ApiCommandController {
      * @param roomId
      * @return
      */
-    @DeleteMapping("/rooms/{roomId}/participants/{chatterId}/leave")
+    @DeleteMapping("/rooms/{roomId}/chatters/{chatterId}")
     @ResponseStatus(HttpStatus.OK)
-    public Future<Void> leaveChatRoom(@PathVariable ChatRoomId roomId,
-                                      @PathVariable ChatterId chatterId) {
-        return commandGateway.send(LeaveRoomCommand.builder()
-                .roomId(roomId)
-                .chatterId(chatterId)
-                .build()
-        );
+    public Mono<Void> leaveChatRoom(@PathVariable ChatRoomId roomId,
+                                    @PathVariable ChatterId chatterId) {
+        MetaData metaData = MetaData.with("userId", "axonUser");
+        return Mono.fromFuture(commandGateway.send(new LeaveRoomCommand(roomId, chatterId), metaData));
+    }
+
+    /**
+     * 删除聊天室
+     * @param roomId
+     * @return
+     */
+    @DeleteMapping("/room/{roomId}")
+    @ResponseStatus(HttpStatus.OK)
+    public Mono<Void> deleteRoom(@PathVariable ChatRoomId roomId) {
+        MetaData metaData = MetaData.with("userId", "axonUser");
+        return Mono.fromFuture(commandGateway.send(new DeleteRoomCommand(roomId), metaData));
     }
 
 }

@@ -3,20 +3,23 @@ package com.feng.axon.command;
 import com.feng.axon.model.ChatRoomId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import javax.validation.constraints.NotEmpty;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateRoomCommand {
-
-    @TargetAggregateIdentifier
-    private ChatRoomId roomId;
+@EqualsAndHashCode(callSuper = true)
+public class CreateRoomCommand extends Command {
 
     @NotEmpty
     private String name;
+
+    CreateRoomCommand(ChatRoomId chatRoomId, String name){
+        super(chatRoomId);
+        this.name = name;
+    }
 }
 

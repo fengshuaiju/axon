@@ -6,19 +6,17 @@ import com.feng.axon.model.ChatRoomId;
 import com.feng.axon.model.ChatterId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class PostMessageCommand {
-    @TargetAggregateIdentifier
-    private ChatRoomId roomId;
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class PostMessageCommand extends Command {
 
     @NotNull
     //此处名字必须和 AggregateMember 中 EntityId 的名字一样
@@ -29,6 +27,12 @@ public class PostMessageCommand {
 
     @JsonCreator
     public PostMessageCommand(@JsonProperty(value = "message") String message) {
+        this.message = message;
+    }
+
+    public PostMessageCommand(ChatRoomId chatRoomId, ChatterId chatterId, String message) {
+        super(chatRoomId);
+        this.chatterId = chatterId;
         this.message = message;
     }
 }

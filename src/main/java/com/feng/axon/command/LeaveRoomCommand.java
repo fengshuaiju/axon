@@ -2,11 +2,7 @@ package com.feng.axon.command;
 
 import com.feng.axon.model.ChatRoomId;
 import com.feng.axon.model.ChatterId;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
+import lombok.*;
 
 import javax.validation.constraints.NotNull;
 
@@ -14,11 +10,14 @@ import javax.validation.constraints.NotNull;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LeaveRoomCommand {
-
-    @TargetAggregateIdentifier
-    private ChatRoomId roomId;
+@EqualsAndHashCode(callSuper = true)
+public class LeaveRoomCommand extends Command {
 
     @NotNull
     private ChatterId chatterId;
+
+    public LeaveRoomCommand(ChatRoomId chatRoomId, ChatterId chatterId){
+        super(chatRoomId);
+        this.chatterId = chatterId;
+    }
 }

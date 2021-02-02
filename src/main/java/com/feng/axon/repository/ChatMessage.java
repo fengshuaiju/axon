@@ -22,14 +22,15 @@ public class ChatMessage {
     private long timestamp;
     private ChatRoomId roomId;
     private ChatterId chatterId;
-    private String message;
     @Setter
+    private String message;
     private String chatterName;
 
-    public ChatMessage(ChatRoomId roomId, ChatterId chatterId, String message){
+    public ChatMessage(ChatRoomId roomId, ChatterId chatterId, String message, String chatterName) {
         this.roomId = roomId;
-        this.chatterId = chatterId;
         this.message = message;
+        this.chatterId = chatterId;
+        this.chatterName = chatterName;
         this.timestamp = System.currentTimeMillis();
     }
 

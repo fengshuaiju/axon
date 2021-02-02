@@ -1,6 +1,7 @@
 package com.feng.axon.model;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
@@ -9,6 +10,7 @@ import java.io.Serializable;
 import java.util.UUID;
 
 @Embeddable
+@EqualsAndHashCode
 @NoArgsConstructor
 public class ChatRoomId implements Serializable {
 
